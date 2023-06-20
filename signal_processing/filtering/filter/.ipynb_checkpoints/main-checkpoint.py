@@ -101,10 +101,10 @@ class Filter:
         w_hz = utils.rad_per_sec_to_hz(w_rad)
         return w_hz, mag
 
-    def plot_magn_response(self, amplitude_unit='normal', freq_unit='Hz', freq_axis='linear'):
+    def plot_magn_response(self):
         w_hz, mag_db = self.magn_response()
         cutoff_freq_hz = self.get_cutoff_freq_hz()
-        filter_plotter(w_hz, mag_db, cutoff_freq_hz , amplitude_unit=amplitude_unit, freq_unit=freq_unit, freq_axis=freq_axis)
+        filter_plotter(w_hz, mag_db, cutoff_freq_hz , amplitude_unit='dB', freq_unit='Hz')
 
         
     # setter functions

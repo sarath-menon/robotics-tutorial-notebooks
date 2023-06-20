@@ -1,10 +1,8 @@
 import numpy as np
 import matplotlib.pylab as plt
-from scipy import signal as dsp
-from scipy.fft import fft, fftfreq
 from enum import Enum
 
-def filter_plotter(w_hz, mag_db, cutoff_freq_hz, amplitude_unit='dB', freq_unit='Hz', freq_axis='linear'):  
+def filter_plotter(w_hz, mag_db, cutoff_freq_hz, amplitude_unit='dB', freq_unit='Hz'):  
     '''
     Plots the frequency response of a filter 
 
@@ -16,7 +14,6 @@ def filter_plotter(w_hz, mag_db, cutoff_freq_hz, amplitude_unit='dB', freq_unit=
     cutoff_freq_hz: cutoff frequency in Hz
     amplitude_unit: unit for plotting amplitude (normal or dB)
     freq_unit: unit for plotting frequency (Hz or rad/s)
-    freq_axis: 'linear' or 'log'
     
     Returns
     ---------
@@ -44,29 +41,16 @@ def filter_plotter(w_hz, mag_db, cutoff_freq_hz, amplitude_unit='dB', freq_unit=
     #  Amplitude axis
     if amplitude_unit=='dB':
         mag = mag_db
-        
+        plt.semilogx(freq_vec, mag)    
         plt.ylabel("Amplitude (dB)")
 
     elif amplitude_unit=='normal':
         mag = 10.0 ** (mag_db/20)
-        # plt.semilogx(freq_vec, mag)    
+        plt.semilogx(freq_vec, mag)    
         plt.ylabel("Amplitude (normal)")
 
     else:
         raise Exception('Unknown amplitude unit')
-
-
-    # frequency axis
-    if freq_axis=='linear':
-        plt.plot(freq_vec, mag) 
-
-    elif freq_axis=='log':
-        plt.semilogx(freq_vec, mag) 
-    else:
-        raise Exception('Unknown frequency axis type')
-
-
-    
     
     # plot the cutoff frequency 
     plt.axvline(x = cutoff_freq, color = 'b', label = 'cutoff freq', linestyle=':')
@@ -77,42 +61,3 @@ def filter_plotter(w_hz, mag_db, cutoff_freq_hz, amplitude_unit='dB', freq_unit=
     
     plt.grid()
     plt.show()
-
-## bode magnitude plot
-
-def plot_bode_magn(h_n, fs):
-
-    '''
-    Plots the bode magnitude of a discrete time transfer function
-
-    Parameters
-    -----------
-
-    h_n: impulse response
-    fs: sampling rate in Hz
-    
-    Returns
-    ---------
-    '''
-
-    plt.figure()
-
-    N = h_n.size
-    dt = 1 / fs
-
-    # frequency points
-    x = np.linspace(0,fs, N)
-    xf = fftfreq(N, dt)[:N//2]
-    
-    #perform fft
-    yf = fft(h_n)
-
-    # compute bode magnitude plot values
-    magn = np.abs(yf[0:N//2])
-
-    # plotting
-    plt.plot(xf, magn)
-    plt.grid()
-    plt.show()
-    
-    
