@@ -4,7 +4,13 @@ from scipy import signal as dsp
 from scipy.fft import fft, fftfreq
 from enum import Enum
 
-def filter_plotter(w_hz, mag_db, cutoff_freq_hz, amplitude_unit='dB', freq_unit='Hz', freq_axis='linear'):  
+def dB_to_normal(val):
+    return 10.0 ** (val/20)
+
+def normal_to_dB(val):
+    return 20*np.log10(val)
+
+def filter_plotter(w_hz, mag, cutoff_freq_hz, amplitude_axis='normal', amplitude_input_unit='normal', freq_unit='Hz', freq_axis='linear'):  
     '''
     Plots the frequency response of a filter 
 
@@ -12,7 +18,7 @@ def filter_plotter(w_hz, mag_db, cutoff_freq_hz, amplitude_unit='dB', freq_unit=
     -----------
 
     w_hz: frequency vector in Hz
-    mag_db: amplitude vector in dB
+    mag: amplitude vector 
     cutoff_freq_hz: cutoff frequency in Hz
     amplitude_unit: unit for plotting amplitude (normal or dB)
     freq_unit: unit for plotting frequency (Hz or rad/s)
@@ -41,32 +47,37 @@ def filter_plotter(w_hz, mag_db, cutoff_freq_hz, amplitude_unit='dB', freq_unit=
         raise Exception('Unknown frequency unit')
     
          
+    #  Amplitude input unit
+    if amplitude_input_unit =='normal':
+        mag_dB = normal_to_dB(mag)
+        mag_normal = mag
+    elif amplitude_input_unit == 'dB':
+        mag_normal = dB_to_normal(mag)
+        mag_dB = mag
+    else:
+        raise Exception('Unknown amplitude input unit')
+    
     #  Amplitude axis
-    if amplitude_unit=='dB':
-        mag = mag_db
-        
-        plt.ylabel("Amplitude (dB)")
-
-    elif amplitude_unit=='normal':
-        mag = 10.0 ** (mag_db/20)
-        # plt.semilogx(freq_vec, mag)    
+    if amplitude_axis == 'normal':
+        mag_plot = mag_normal
         plt.ylabel("Amplitude (normal)")
 
+    elif amplitude_axis=='dB':
+        mag_plot = mag_dB
+        plt.ylabel("Amplitude (dB)")
+
     else:
-        raise Exception('Unknown amplitude unit')
+        raise Exception('Unknown amplitude axis unit')
 
 
     # frequency axis
     if freq_axis=='linear':
-        plt.plot(freq_vec, mag) 
+        plt.plot(freq_vec, mag_plot) 
 
     elif freq_axis=='log':
-        plt.semilogx(freq_vec, mag) 
+        plt.semilogx(freq_vec, mag_plot) 
     else:
-        raise Exception('Unknown frequency axis type')
-
-
-    
+        raise Exception('Unknown frequency axis type') 
     
     # plot the cutoff frequency 
     plt.axvline(x = cutoff_freq, color = 'b', label = 'cutoff freq', linestyle=':')
