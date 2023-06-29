@@ -136,11 +136,7 @@ function quad_2d_plot_lsim(t,x)
     fig
 end
 
-struct SimParams1
-    nx::Int8
-    Ts::Float64
-end
-SimParams = SimParams1
+
 
 
 
