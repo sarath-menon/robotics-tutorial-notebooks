@@ -30,12 +30,14 @@ end
 
 Pose2D = Pose2D1
 #--------------------------------------------------------------------------
-struct SimParams1
+struct SimParams2
     nx::Int8
+    nu::Int8
+    ny::Int8
     Ts::Float64
     
 end
-SimParams = SimParams1
+SimParams = SimParams2
 #--------------------------------------------------------------------------
 struct SafetyBox2
     x_max::Float64
