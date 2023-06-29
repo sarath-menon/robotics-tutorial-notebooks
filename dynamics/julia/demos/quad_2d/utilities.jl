@@ -2,7 +2,7 @@ function quad_2d_plot_normal(sol::ODESolution)
     fig = Figure(resolution=(1200, 600))
 
     # state variables 
-    x_ax = Axis(fig[1, 1], title="x")
+    y_ax = Axis(fig[1, 1], title="y")
     z_ax = Axis(fig[2, 1], title="z")
     theta_ax = Axis(fig[3, 1], title="theta")
 
@@ -23,7 +23,7 @@ function quad_2d_plot_normal(sol::ODESolution)
     lines!(thrust_ax, sol.t, thrust)
     lines!(torque_ax, sol.t, torque )
 
-    x_ax.ylabel = "x [m]"
+    y_ax.ylabel = "y [m]"
     z_ax.ylabel = "z [m]"
     theta_ax.ylabel = "θ [rad]"
 
