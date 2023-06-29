@@ -40,22 +40,20 @@ function generate_circle_trajectory(trajec::NamedTuple, t::Vector{Float64})
     y₀ = getindex(trajec, :y₀)
     z₀ = getindex(trajec, :z₀)
 
-    y::Vector{Float64} = (r*cos.(ω*t)) .+ y₀
-    z::Vector{Float64} = (r*sin.(ω*t)) .+ z₀
-
-    # ẋ::Float64 = -r * sin(ω*t)*ω̇
-    # ẏ::Float64 = r * cos(ω*t)*ω̇
+    y::Vector{Float64} = r*cos.(ω*t) .+ y₀
+    z::Vector{Float64} = r*sin.(ω*t) .+ z₀
 
     # ẋ,ẏ = 0, since ω̇=0
-    ẏ::Vector{Float64} = zeros(length(t))
-    ż::Vector{Float64} = zeros(length(t))
+    ẏ::Vector{Float64} = (-r*sin.(ω*t))*ω
+    ż::Vector{Float64} = (r*cos.(ω*t))*ω
+
+    ÿ::Vector{Float64} = -y .* (ω^2)
+    z̈::Vector{Float64} = -z .* (ω^2)
     
     m::Float64 = 1.0
     
     # compute theta using differential flatness
-    θ::Vector{Float64}= fill(atan.(1, m*9.81), length(t))
-
-    # θ̇ = 0, since ẍ=ÿ=0
+    θ::Vector{Float64}= atan.(-m*ÿ, m*(z̈ .+ 9.81))
     θ̇ = 0 
     
     return [y, z, θ , ẏ , ż, θ̇]
@@ -74,29 +72,23 @@ function generate_circle_trajectory(trajec::NamedTuple, t::Float64)
     y₀ = getindex(trajec, :y₀)
     z₀ = getindex(trajec, :z₀)
 
-    y::Float64 = (r*cos.(ω*t)) + y₀
-    z::Float64 = (r*sin.(ω*t)) + z₀
-
-    # ẋ::Float64 = -r * sin(ω*t)*ω̇
-    # ẏ::Float64 = r * cos(ω*t)*ω̇
+    y::Float64 = (r*cos(ω*t)) + y₀
+    z::Float64 = (r*sin(ω*t)) + z₀
 
     # ẋ,ẏ = 0, since ω̇=0
-    ẏ::Float64 = 0.0
-    ż::Float64 = 0.0
+    ẏ::Float64 = (-r*sin(ω*t))*ω
+    ż::Float64 = (r*cos(ω*t))*ω
+
+    ÿ::Float64 = -y * (ω^2)
+    z̈::Float64 = -z * (ω^2)
     
     m::Float64 = 1.0
     
     # compute theta using differential flatness
-    θ::Float64 = atan(1, m*9.81)
-
-    # θ̇ = 0, since ẍ=ÿ=0
+    θ::Float64 = atan(-m*ÿ, m*(z̈ + 9.81))
     θ̇ = 0 
     
     return [y, z, θ , ẏ , ż, θ̇]
 end
 
-    
-    
-    
-#     return [y, z, θ , ẏ , ż, θ̇]
-# end
+
