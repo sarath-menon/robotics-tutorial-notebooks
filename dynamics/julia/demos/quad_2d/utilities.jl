@@ -53,7 +53,7 @@ function quad_2d_plot(sys::ODESystem, sol::ODESolution)
     lines!(theta_ax, sol.t[:], sol[sys.θ])
 
     thrust = sol[sys.f_1] + sol[sys.f_2]
-    torque = (sol[sys.f_1] -  sol[sys.f_2]) * 0.2
+    torque = (sol[sys.f_1] -  sol[sys.f_2]) * 0.1
 
     lines!(thrust_ax, sol.t, thrust)
     lines!(torque_ax, sol.t[:], torque )
