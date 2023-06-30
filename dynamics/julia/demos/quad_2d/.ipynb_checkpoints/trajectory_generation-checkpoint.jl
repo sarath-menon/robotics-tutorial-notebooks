@@ -27,39 +27,6 @@ function generate_circle_trajectory(trajec::NamedTuple)
 end
 
 
-
-function generate_circle_trajectory(trajec::NamedTuple, t::Vector{Float64})
-
-    # Getting value using Key
-    tspan = getindex(trajec, :tspan)
-    
-    dt = getindex(trajec, :dt)
-    r = getindex(trajec, :r)
-    ω = getindex(trajec, :ω)
-
-    y₀ = getindex(trajec, :y₀)
-    z₀ = getindex(trajec, :z₀)
-
-    y::Vector{Float64} = r*cos.(ω*t) .+ y₀
-    z::Vector{Float64} = r*sin.(ω*t) .+ z₀
-
-    # ẋ,ẏ = 0, since ω̇=0
-    ẏ::Vector{Float64} = (-r*sin.(ω*t))*ω
-    ż::Vector{Float64} = (r*cos.(ω*t))*ω
-
-    ÿ::Vector{Float64} = -y .* (ω^2)
-    z̈::Vector{Float64} = -z .* (ω^2)
-    
-    m::Float64 = 1.0
-    
-    # compute theta using differential flatness
-    θ::Vector{Float64}= atan.(-m*ÿ, m*(z̈ .+ 9.81))
-    θ̇ = 0 
-    
-    return [y, z, θ , ẏ , ż, θ̇]
-end
-
-
 function generate_circle_trajectory(trajec_params::NamedTuple, quad_params::NamedTuple, t::Float64)
     m::Float64 = quad_params.m
     
@@ -67,7 +34,6 @@ function generate_circle_trajectory(trajec_params::NamedTuple, quad_params::Name
     ω::Float64 = trajec_params.ω
     g::Float64 = trajec_params.g
 
-    tspan = trajec_params.tspan
     y₀ = trajec_params.y₀
     z₀ = trajec_params.z₀
 
@@ -93,4 +59,44 @@ function generate_circle_trajectory(trajec_params::NamedTuple, quad_params::Name
     return [y, z, θ , ẏ , ż, θ̇]
 end
 
+function generate_circle_trajectory(trajec_params::NamedTuple, quad_params::NamedTuple, tspan::Tuple, dt::Float64)
+    y_vec = Float64[]
+    z_vec = Float64[]
+    θ_vec = Float64[]
+    ẏ_vec = Float64[]
+    ż_vec = Float64[]
+    θ̇_vec = Float64[]
+    
+    for t in tspan[1]:dt:tspan[2]
+        (y, z, θ , ẏ , ż, θ̇) = generate_circle_trajectory(trajec_params, quad_params, t);
+        push!(y_vec, y)
+        push!(z_vec, z)
+        push!(θ_vec, θ)
+        push!(ẏ_vec, ẏ)
+        push!(ż_vec, ż)
+        push!(θ̇_vec, θ̇)
+    end 
+    
+    return [y_vec, z_vec, θ_vec, ẏ_vec , ż_vec, θ̇_vec]
+end
 
+function generate_circle_trajectory(trajec_params::NamedTuple, quad_params::NamedTuple, t_vec::Vector{Float64})
+    y_vec = Float64[]
+    z_vec = Float64[]
+    θ_vec = Float64[]
+    ẏ_vec = Float64[]
+    ż_vec = Float64[]
+    θ̇_vec = Float64[]
+    
+    for t in t_vec
+        (y, z, θ , ẏ , ż, θ̇) = generate_circle_trajectory(trajec_params, quad_params, t);
+        push!(y_vec, y)
+        push!(z_vec, z)
+        push!(θ_vec, θ)
+        push!(ẏ_vec, ẏ)
+        push!(ż_vec, ż)
+        push!(θ̇_vec, θ̇)
+    end 
+    
+    return [y_vec, z_vec, θ_vec, ẏ_vec , ż_vec, θ̇_vec]
+end
