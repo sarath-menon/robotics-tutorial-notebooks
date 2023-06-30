@@ -2,7 +2,7 @@
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "fca99d55230f7855a6ba96e7399ea2587a82677f"
+project_hash = "a704d4974441db18b76c7d8acea869d7b3c4365d"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "e58c18d2312749847a74f5be80bb0fa53da102bd"
@@ -1292,6 +1292,11 @@ deps = ["OpenLibm_jll"]
 git-tree-sha1 = "0877504529a3e5c3343c6f8b4c0381e57e4387e4"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "1.0.2"
+
+[[deps.NamedTupleTools]]
+git-tree-sha1 = "90914795fc59df44120fe3fff6742bb0d7adb1d0"
+uuid = "d9ec5142-1e00-5aa0-9d6a-321866360f50"
+version = "0.14.3"
 
 [[deps.Netpbm]]
 deps = ["FileIO", "ImageCore", "ImageMetadata"]

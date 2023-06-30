@@ -180,32 +180,12 @@ function quad_2d_plot_lsim(t,x)
 end
 
 
+function create_safety_box(;x_low, x_high, y_low, y_high, z_low, z_high)
+    safety_box =  SafetyBox(x_low, x_high, y_low, y_high, z_low, z_high)
+    return safety_box
+end
 
-
-
-
-# # initial conditions
-# u₀ = Dict(
-#     y => 0.0,
-#     z => 2.0,
-#     θ => 0.0,
-#     D(y) => 0.0,
-#     D(z) => 0.0,
-#     D(θ) => 0.0,
-# )
-
-# # parameter values
-# params = Dict(
-#     l => 0.1,
-#     I_zz => 0.003 ,
-#     m => 0.5,
-# )
-
-
-# #Pass to solver
-# tspan = (0.0, 10.0)
-# prob = ODEProblem(sys, u₀, tspan, params, jac=true)
-# sol = solve(prob, Tsit5(), reltol=1e-8, abstol=1e-8);
-
-# #plotting
-# quad_2d_plot(sol)
+function create_safety_box(;x_low, x_high, y_low, y_high, z_low, z_high)
+    safety_box =  SafetyBox(x_low, x_high, y_low, y_high, z_low, z_high)
+    return safety_box
+end
