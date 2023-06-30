@@ -148,7 +148,7 @@ function quad_2d_plot_state(sys::ODESystem, sol::ODESolution)
     fig
 end
 
-function quad_2d_plot_lsim(t,x)
+function quad_2d_plot_lsim(t,x, uout)
     fig = Figure(resolution=(1200, 500))
 
     x_ax = Axis(fig[1, 1], title="x")
