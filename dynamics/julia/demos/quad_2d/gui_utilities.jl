@@ -21,7 +21,7 @@ end
 
 function plot_axis2d_tm(axis::Axis; x::Observable{Float64}, y::Observable{Float64}, color=:black)
     # fraw plot
-    vlines!(axis, x, color=color)
+    vlines!(axis, x, color=color, linewidth=2)
 end
 
 function plot_trajectory(config_dict::Dict, config)
