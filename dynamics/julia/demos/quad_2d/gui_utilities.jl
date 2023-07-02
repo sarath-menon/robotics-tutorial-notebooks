@@ -33,7 +33,7 @@ function plot_trajectory(config_dict::Dict, config)
     end
 end
 
-function plot_3d_trajectory1(; sim_time_obs::Observable, sim_state_obs::Observable, duration=10.0, dt=0.01, frame_rate=25)
+function plot_3d_trajectory(; sim_time_obs::Observable, sim_state_obs::Observable, duration=10.0, dt=0.01, frame_rate=25)
 
     step_count::Integer = convert(Integer, duration / dt)
 
