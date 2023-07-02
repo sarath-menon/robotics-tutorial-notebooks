@@ -1,0 +1,29 @@
+sim:
+  dt: 0.01 # Timestep for the integrator
+  t_final: 100. # End time of simulation in seconds (starts at seconds)
+  seed: 1 # Seed for top-level random number generator
+  log_file_path: logs
+  log_file_prefix: logs
+
+vehicle:
+  type: quadcopter
+  name: crazyflie
+  properties:
+    mass: 1 #[kg]
+    I_matrix: [[5., 0., 0.], [0., 5., 0.], [0., 0., 5.]] # inertia matrix about CG [kg m^2]
+  initial_state:
+    pos: [0., 0., 0.] #(x,y,z) position [m]
+    vel: [0., 0., 0.] #(x,y,z) velocity [m/s]
+    q_BI: [1, 0., 0., 0.] # orientation as quaternion (q_w, q_x, q_y, q_z)
+    ω_BI: [0., 0., 0.] #(x,y,z) angular velocity [deg/s]
+  sensors:
+    - type: gyroscope
+      name: gyro
+      constants:
+        angular_random_walk: 0. # 0.000001
+        initial_bias_magnitude: 0. #0.00001
+        bias_random_walk: 0. #0.000001
+      sampling_rate: 1000 #[Hz]
+
+  computers: # These are more sophisticated and can run multiple processes at various rates.
+    - model: microcontroller # Generic flight computer; just runs its softwares
