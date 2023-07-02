@@ -44,7 +44,7 @@ function plot_3d_trajectory(; sim_time_obs::Observable, sim_state_obs::Observabl
         # stop simulation is stop button is pressed
         if sim_state_obs[] == true
 
-            max_range = 2.0
+            max_range = axis_params.high - axis_params.low
             dist = max_range / 2
 
             x_pos::Float64 = 0.0
