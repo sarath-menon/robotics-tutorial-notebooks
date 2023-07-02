@@ -19,6 +19,11 @@ function plot_axis2d(axis::Axis; x::Vector{Float64}, y::Vector{Float64}, title::
     lines!(axis, x, y, linestyle=linestyle, color=color, linewidth=linewidth)
 end
 
+function plot_axis2d_tm(axis::Axis; x::Observable{Float64}, y::Observable{Float64}, color=:black)
+    # fraw plot
+    vlines!(axis, x, color=color)
+end
+
 function plot_trajectory(config_dict::Dict, config)
     # diplayed plots
     for (i, title) in enumerate(config_dict[config])
@@ -30,6 +35,10 @@ function plot_trajectory(config_dict::Dict, config)
 
         # plot desired trajectory 
         plot_axis2d(state_plots[i]; x=df.timestamp, y=df[!, title*"_req"], title=title, linestyle=:dash, color=:green, linewidth=6)
+
+        # plot time marker
+        plot_axis2d_tm(state_plots[i]; x=time_marker, y=time_marker)
+
     end
 end
 
