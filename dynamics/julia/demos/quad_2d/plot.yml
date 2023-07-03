@@ -1,4 +1,9 @@
+title:
+  name: Jarvis
+
 visualizer:
+  name: Crazyflie
+
   axis:
     low: -0.5
     high: 0.5
@@ -6,6 +11,13 @@ visualizer:
     aspect_y: 1
     aspect_z: 1
     label_size: 40
+    labels:
+      x: X Axis
+      y: Y Axis
+      z: Z Axis
+    spine_width: 2
+    label_offset: 60
+    grid_width: 1.5
   model:
     scale: 1.0
     initial_translation: [0.0, 0.0, 0.0]
@@ -29,32 +41,3 @@ graph:
         y_axis_names: ["y", "z", "θ"]
       - name: ẏżθ̇
         y_axis_names: ["y_dot", "z_dot", "θ_dot"]
-
-vehicle:
-  type: quadcopter
-  name: crazyflie
-  properties:
-    mass: 1 #[kg]
-    I_matrix: [[5., 0., 0.], [0., 5., 0.], [0., 0., 5.]] # inertia matrix about CG [kg m^2]
-  initial_state:
-    pos: [0., 0., 0.] #(x,y,z) position [m]
-    vel: [0., 0., 0.] #(x,y,z) velocity [m/s]
-    q_BI: [1, 0., 0., 0.] # orientation as quaternion (q_w, q_x, q_y, q_z)
-    ω_BI: [0., 0., 0.] #(x,y,z) angular velocity [deg/s]
-
-  sensors:
-    - type: gyroscope
-      name: gyro
-      constants:
-        angular_random_walk: 0. # 0.000001
-        initial_bias_magnitude: 0. #0.00001
-        bias_random_walk: 0. #0.000001
-      sampling_rate: 1000 #[Hz]
-
-    - type: accelerometer
-      name: accel
-      constants:
-      sampling_rate: 500 #[Hz]
-
-  computers: # These are more sophisticated and can run multiple processes at various rates.
-    - model: microcontroller # Generic flight computer; just runs its softwares
