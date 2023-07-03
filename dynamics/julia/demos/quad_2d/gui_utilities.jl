@@ -1,14 +1,25 @@
-# convert standrard quaternion, euler angle to makie quaternin type
-function to_makie_quaternion(R_quat::QuatRotation)::Quaternion
-    return Quaternion(R_quat.q.s, R_quat.q.v1, R_quat.q.v2, R_quat.q.v3)
-end
+# # convert standrard quaternion, euler angle to makie quaternin type
+# function to_makie_quaternion(R_quat::QuatRotation)::Quaternion
+#     return Quaternion(R_quat.q.s, R_quat.q.v1, R_quat.q.v2, R_quat.q.v3)
+# end
 
-function to_makie_quaternion(R_euler::RotZYX)::Quaternion
+# function to_makie_quaternion(R_euler::RotZYX)::Quaternion
 
-    # Convert the rotation to unit quaternion
-    R_quat = QuatRotation(R_euler)
+#     # Convert the rotation to unit quaternion
+#     R_quat = QuatRotation(R_euler)
 
-    return Quaternion(R_quat.q.s, R_quat.q.v1, R_quat.q.v2, R_quat.q.v3)
+#     return Quaternion(R_quat.q.s, R_quat.q.v1, R_quat.q.v2, R_quat.q.v3)
+# end
+
+function get_primary_resolution(index::Integer)
+    monitors = GLMakie.GLFW.GetMonitors()
+
+    videomode = GLMakie.MonitorProperties(monitors[index]).videomode
+    (xscale, yscale) = GLMakie.GLFW.GetMonitorContentScale(monitors[index])
+
+    (height, width) = (videomode.width * xscale, videomode.height * yscale)
+    (height, width) = (convert(Int, height), convert(Int, width))
+    return (height, width)
 end
 
 function plot_axis2d(axis::Axis; x::Vector{Float64}, y::Vector{Float64}, title::String, linestyle=nothing, color=:black, linewidth=3)

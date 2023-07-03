@@ -17,7 +17,7 @@ visualizer:
     spine_width: 2
     label_offset: 60
     grid_width: 1.5
-  model:
+  mesh:
     scale: 1.0
     initial_translation: [0.0, 0.0, 0.0]
 
