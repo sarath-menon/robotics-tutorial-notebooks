@@ -42,6 +42,28 @@ function plot_trajectory(config_dict::Dict, config)
     end
 end
 
+function plot_trajectory(configs_vec::Vector{String}, config::String)
+
+    titles_vec = get_axis_titles(configs_vec, config)
+
+
+    # diplayed plots
+    for (i, title) in enumerate(titles_vec)
+        # clear axis
+        empty!(state_plots[i])
+
+        # plot actual trajectory 
+        plot_axis2d(state_plots[i]; x=df.timestamp, y=df[!, title], title=title, linewidth=2)
+
+        # plot desired trajectory 
+        plot_axis2d(state_plots[i]; x=df.timestamp, y=df[!, title*"_req"], title=title, linestyle=:dash, color=:green, linewidth=6)
+
+        # plot time marker
+        plot_axis2d_tm(state_plots[i]; x=time_marker, y=time_marker)
+
+    end
+end
+
 function plot_3d_trajectory(; sim_time_obs::Observable, sim_state_obs::Observable, duration=10.0, dt=0.01, frame_rate=25)
 
     step_count::Integer = convert(Integer, duration / dt)
