@@ -2,7 +2,7 @@
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "60f3fe1b8454126bfdbd2cce735d3ab3a8722698"
+project_hash = "5d56774934dbd6699d773e3a68f42da0afdf1ccc"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "e58c18d2312749847a74f5be80bb0fa53da102bd"
@@ -1753,6 +1753,12 @@ version = "0.2.18"
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
 uuid = "189a3867-3050-52da-a836-e630ba90ab69"
 version = "1.2.2"
+
+[[deps.ReferenceFrameRotations]]
+deps = ["Crayons", "LinearAlgebra", "Printf", "Random", "StaticArrays"]
+git-tree-sha1 = "ec9bde2e30bc221e05e20fcec9a36a9c315e04a6"
+uuid = "74f56ac7-18b3-5285-802d-d4bd4f104033"
+version = "3.0.0"
 
 [[deps.RelocatableFolders]]
 deps = ["SHA", "Scratch"]

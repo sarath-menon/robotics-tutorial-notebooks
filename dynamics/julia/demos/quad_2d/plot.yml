@@ -2,8 +2,7 @@ title:
   name: Jarvis
 
 visualizer:
-  name: Crazyflie
-
+  title: Crazyflie
   axis:
     low: -0.5
     high: 0.5
