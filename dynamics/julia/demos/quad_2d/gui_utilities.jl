@@ -1,15 +1,16 @@
 # # convert standrard quaternion, euler angle to makie quaternin type
-# function to_makie_quaternion(R_quat::QuatRotation)::Quaternion
-#     return Quaternion(R_quat.q.s, R_quat.q.v1, R_quat.q.v2, R_quat.q.v3)
-# end
+function to_makie_quaternion(q::Quaternion{Float64})::Quaternionf
+    return Quaternionf(q.q1, q.q2, q.q3, q.q0)
+end
 
-# function to_makie_quaternion(R_euler::RotZYX)::Quaternion
+function to_quaternion(q::NamedTuple)::Quaternion
+    return Quaternion(q.q_w, q.q_x, q.q_y, q.q_z)
+end
 
-#     # Convert the rotation to unit quaternion
-#     R_quat = QuatRotation(R_euler)
-
-#     return Quaternion(R_quat.q.s, R_quat.q.v1, R_quat.q.v2, R_quat.q.v3)
-# end
+function rotate_mesh(q::Quaternion)
+    makie_q = to_makie_quaternion(q)
+    rotate!(m, makie_q)
+end
 
 function get_primary_resolution(index::Integer)
     monitors = GLMakie.GLFW.GetMonitors()
