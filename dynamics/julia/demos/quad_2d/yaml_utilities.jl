@@ -22,7 +22,7 @@ end
 function get_axis_titles(configs_vec::Vector{String}, config::String)
     index = findfirst(item -> item == config, configs_vec)
 
-    axis_titles = getindex(params_tuple.graph.axis.configs[index], :y_axis_names)
+    axis_titles = getindex(plot_params.graph.axis.configs[index], :y_axis_names)
 
     return axis_titles
 end

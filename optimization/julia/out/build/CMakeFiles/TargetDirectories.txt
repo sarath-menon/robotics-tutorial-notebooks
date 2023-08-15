@@ -1,0 +1,8 @@
+/Users/sarathmenon/Documents/eth_courses/notebooks/math/julia/convex optimization/out/build/CMakeFiles/emosqpstatic.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/math/julia/convex optimization/out/build/CMakeFiles/example.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/math/julia/convex optimization/out/build/CMakeFiles/edit_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/math/julia/convex optimization/out/build/CMakeFiles/rebuild_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/math/julia/convex optimization/out/build/src/osqp/CMakeFiles/edit_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/math/julia/convex optimization/out/build/src/osqp/CMakeFiles/rebuild_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/math/julia/convex optimization/out/build/include/CMakeFiles/edit_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/math/julia/convex optimization/out/build/include/CMakeFiles/rebuild_cache.dir

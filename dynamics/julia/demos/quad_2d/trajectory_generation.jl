@@ -26,7 +26,6 @@ function generate_circle_trajectory(trajec::NamedTuple)
     return [x_vec, y_vec]
 end
 
-
 function generate_circle_trajectory(trajec_params::NamedTuple, quad_params::NamedTuple, t::Float64)
     m::Float64 = quad_params.m
     
@@ -49,14 +48,13 @@ function generate_circle_trajectory(trajec_params::NamedTuple, quad_params::Name
 
     ÿ_func(r::Real,ω::Real,t::Real) = -r*cos(ω*t) * (ω^2)
     z̈_func(r::Real,ω::Real,t::Real) = -r*sin(ω*t) * (ω^2)
-
     θ_func(t::Real) = atan(-m * ÿ_func(r,ω,t), m*(z̈_func(r,ω,t) -g))
 
     # compute θ, θ̇ using differential flatness
     θ::Float64 =  θ_func(t)
     θ̇::Float64 = ForwardDiff.derivative(θ_func, t) # constant value (precomputed)
     
-    return [y, z, θ , ẏ , ż, θ̇]
+    return @SVector [y, z, θ , ẏ , ż, θ̇]
 end
 
 function generate_circle_trajectory(trajec_params::NamedTuple, quad_params::NamedTuple, tspan::Tuple, dt::Float64)
@@ -99,4 +97,17 @@ function generate_circle_trajectory(trajec_params::NamedTuple, quad_params::Name
     end 
     
     return [y_vec, z_vec, θ_vec, ẏ_vec , ż_vec, θ̇_vec]
+end
+
+function generate_circle_trajectory!(trajec_params::NamedTuple, quad_params::NamedTuple,log_matrix, t_vec)
+
+    for (i,t) in enumerate(t_vec)
+        (y, z, θ , ẏ , ż, θ̇) = generate_circle_trajectory(trajec_params, quad_params, t);
+        log_matrix[i,1] = y
+        log_matrix[i,2] = z
+        log_matrix[i,3] = θ
+        log_matrix[i,4] = ẏ
+        log_matrix[i,5] = ż
+        log_matrix[i,6] = θ̇
+    end 
 end

@@ -1,0 +1,12 @@
+/Users/sarathmenon/Documents/eth_courses/notebooks/optimization/python/cvxpygen_examples/MPC_code/c/build/CMakeFiles/cpg_example.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/optimization/python/cvxpygen_examples/MPC_code/c/build/CMakeFiles/cpg.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/optimization/python/cvxpygen_examples/MPC_code/c/build/CMakeFiles/edit_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/optimization/python/cvxpygen_examples/MPC_code/c/build/CMakeFiles/rebuild_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/optimization/python/cvxpygen_examples/MPC_code/c/build/solver_code/CMakeFiles/emosqpstatic.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/optimization/python/cvxpygen_examples/MPC_code/c/build/solver_code/CMakeFiles/example.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/optimization/python/cvxpygen_examples/MPC_code/c/build/solver_code/CMakeFiles/edit_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/optimization/python/cvxpygen_examples/MPC_code/c/build/solver_code/CMakeFiles/rebuild_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/optimization/python/cvxpygen_examples/MPC_code/c/build/solver_code/src/osqp/CMakeFiles/edit_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/optimization/python/cvxpygen_examples/MPC_code/c/build/solver_code/src/osqp/CMakeFiles/rebuild_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/optimization/python/cvxpygen_examples/MPC_code/c/build/solver_code/include/CMakeFiles/edit_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/optimization/python/cvxpygen_examples/MPC_code/c/build/solver_code/include/CMakeFiles/rebuild_cache.dir
