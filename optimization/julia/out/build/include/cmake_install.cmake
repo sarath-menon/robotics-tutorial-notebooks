@@ -1,4 +1,4 @@
-# Install script for directory: /Users/sarathmenon/Documents/eth_courses/notebooks/math/julia/convex optimization/out/include
+# Install script for directory: /Users/sarathmenon/Documents/eth_courses/notebooks/optimization/julia/out/include
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
