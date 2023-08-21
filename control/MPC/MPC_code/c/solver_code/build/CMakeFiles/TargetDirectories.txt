@@ -1,0 +1,8 @@
+/Users/sarathmenon/Documents/eth_courses/notebooks/control/MPC/MPC_code/c/solver_code/build/CMakeFiles/emosqpstatic.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/control/MPC/MPC_code/c/solver_code/build/CMakeFiles/example.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/control/MPC/MPC_code/c/solver_code/build/CMakeFiles/edit_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/control/MPC/MPC_code/c/solver_code/build/CMakeFiles/rebuild_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/control/MPC/MPC_code/c/solver_code/build/src/osqp/CMakeFiles/edit_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/control/MPC/MPC_code/c/solver_code/build/src/osqp/CMakeFiles/rebuild_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/control/MPC/MPC_code/c/solver_code/build/include/CMakeFiles/edit_cache.dir
+/Users/sarathmenon/Documents/eth_courses/notebooks/control/MPC/MPC_code/c/solver_code/build/include/CMakeFiles/rebuild_cache.dir
