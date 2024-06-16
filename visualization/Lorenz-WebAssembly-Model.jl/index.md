@@ -1,219 +1,44 @@
 \begin{section}{}
-~~~<div id="mdpad"></div></div>
-~~~
-\end{section}
 
-\begin{section}{title="Components"}
-
-This is an example app to demonstrate how Julia code for DiffEq-type simulations can be compiled for use on the web. This app is built with the following:
-
-* [StaticCompiler](https://github.com/tshort/StaticCompiler.jl) compiles a Julia model to WebAssembly. This uses [GPUCompiler](https://github.com/JuliaGPU/GPUCompiler.jl) which does most of the work. [StaticTools](https://github.com/brenhinkeller/StaticTools.jl) helps with this static compilation.
-* [DiffEqGPU](https://github.com/SciML/DiffEqGPU.jl) provides simulation code that is amenable to static compilation.
-* [WebAssemblyInterfaces](https://github.com/tshort/WebAssemblyInterfaces.jl) and [wasm-ffi](https://github.com/demille/wasm-ffi) provide convenient ways to interface between JavaScript and Julia/WebAssembly code.
-* [mdpad](https://mdpad.netlify.app/) provides features for single-page web apps.
-* [PkgPage](https://github.com/tlienart/PkgPage.jl) and [Franklin](https://github.com/tlienart/Franklin.jl) build this page from Markdown. The source code on this page also compiles the WebAssembly modeling code.
-
-\end{section}
-
-\begin{section}{title="WebAssembly"}
-
-Here is the model with initial conditions that we'll compile. The important part is using [DiffEqGPU](https://github.com/SciML/DiffEqGPU.jl) to set up an integrator. Because it is designed to run on a GPU, it is natural for static compilation. It doesn't allocate or use features from `libjulia`.
-
-```julia:j1
-using DiffEqGPU, StaticArrays, OrdinaryDiffEq
-using StaticTools
-using JSServe
-
-# tres = MallocVector{Float64}(undef,)
-# u0 = MallocVector{Float64}
-# u1 = MallocVector{Float64}
-# u2 = MallocVector{Float64}
-
-function lorenz(u, p, t)
-    σ = p[1]
-    ρ = p[2]
-    β = p[3]
-    du1 = σ * (u[2] - u[1])
-    du2 = u[1] * (ρ - u[3]) - u[2]
-    du3 = u[1] * u[2] - β * u[3]
-    return SVector{3}(du1, du2, du3)
-end
-
-u0 = @SVector [1.0; 0.0; 0.0]
-tspan = (0.0, 20.0)
-p = @SVector [10.0, 28.0, 8 / 3.0]
-prob = ODEProblem{false}(lorenz, u0, tspan, p)
-
-integ = DiffEqGPU.init(GPUTsit5(), prob.f, false, u0, 0.0, 0.005, p, nothing, CallbackSet(nothing), true, false)
+## Dynamical System
+* Effect of the actions do not appear immediately - the behaviour evolves with time
+* Eg. To go from 30 km/hr to 60 km/hr in a car we press the accelerator pedal. We know the card doesn't reach 60 km/hr immedately, it takes a few seconds to accelerate to that velocity.
 
 
-function first_order_sys!(x, p, t)
-    τ = p[1]
+# Mathematical models
 
-    dx = (1. - x[1]) / τ
+* Mathematical Representation of a physical, biological or information system. In this class, we focus on dynamical systems (mostly in state-space form)
+* "All models are wrong, but some are useful". Often, a model is an approximation of the real system. The real system might be too complicated to model perfectly. For eg. aerodynamic interactions between the rotor blades of a quadcopter, friction between the tire and ground for a physical robot etc. 
+* The required modelling accuracy depends on the application at hand. Eg. aerodynamic drag can be neglected for low-speed control design for quadcopters
+* Analysis and design must performed keeping in mind the limitations of the model
 
-    return SVector{1}(dx)
-end
+## Why models ?
 
-X0 = @SVector [0.0]
-tspan = (0.0, 20.0)
-p2 = @SVector [0.2]
-prob2 = ODEProblem{false}(first_order_sys!, X0, tspan, p2)
+* Simulation
+* Controller design
+* Verfication and Validaton
+* Diagnostics, predictive maintenance
 
-integ2 = DiffEqGPU.init(GPUTsit5(), prob2.f, false, X0, 0.0, 0.005, p2, nothing, CallbackSet(nothing), true, false)
-```
+# Linear Models
 
-Now, we can define a function to solve this model. We won't use `DiffEqGPU.solve()` because that's too complicated. Instead, we'll use `integ` and manually step through the solution. We'll update solution vectors along the way. 
+Linear models are convenient becuase they're well understood. Lots of tools and techniques are available for the analysis, simulatios, synthesis, simulation, verification etc linear systems. Unfortunately, real world physical systems are never exactly linear. But the behaviour around the desired operating points can be approximated with a linearized version of the actual non-linear modle. Eg. for a quadcopter, the behaviour near hoover condtion can be approximated with linear systems 
 
-```julia:j2
-function solv(integ, tres, u1, u2, u3)
-    for i in Int32(1):Int32(10000)
-        @inline DiffEqGPU.step!(integ, integ.t + integ.dt, integ.u)
-        tres[i] = integ.t
-        u1[i] = integ.u[1]
-        u2[i] = integ.u[2]
-        u3[i] = integ.u[3]
-    end
-    nothing
-end
-```
+# First order response
 
-Now, we can compile `solv` to the WebAssembly file `_libs/julia_solv.wasm` using `StaticCompiler.compile_wasm`. `StaticTools.MallocVector` is used for the solution vectors. When compiling, `flags` are passed to the WebAssembly linker (`lld -flavor wasm`), and we can include the initial memory size and other files to link in. Initial memory must be big enough to hold objects we'll use.
+Equation is: $$ \tau\dot{x} + x = u(t) $$
 
-```julia:j3
-using StaticCompiler, StaticTools
-
-compile_wasm(solv, 
-    Tuple{typeof(integ), 
-          MallocVector{Float64}, MallocVector{Float64}, 
-          MallocVector{Float64}, MallocVector{Float64}}, 
-    path = "_libs",
-    flags = `--initial-memory=1048576 walloc.o`, filename = "julia_solv")
-```
-
-[StaticCompiler](https://github.com/tshort/StaticCompiler.jl) can only compile a restricted subset of Julia code. [DiffEqGPU](https://github.com/SciML/DiffEqGPU.jl) is amenable to static compilation. It doesn't have internal allocations or use of Arrays or other code needing `libjulia` functionality. Note that DiffEqGPU has fewer options for solvers, and solvers are not as robust as standard DiffEq packages.  
-
-Note that WebAssembly in browsers is mainly a 32-bit system (`wasm32`). A 64-bit Julia can compile to `wasm32`, but the best approach is to use a 32-bit version of Julia, so the memory layouts are closer. This page was developed locally with 64-bit Julia.
-
-\end{section}
-
-\begin{section}{title="Interfacing"}
-
-
-[wasm-ffi](https://github.com/demille/wasm-ffi) is a great JavaScript package that provides convenient ways to interface between JavaScript and WebAssembly code. It can allocate objects in WebAssembly memory and provides conveniences to read and write to those objects. We use the Julia package [WebAssemblyInterfaces](https://github.com/tshort/WebAssemblyInterfaces.jl) to generate JavaScript code for `wasm-ffi`. 
-
-WebAssembly has no automatic memory management. All WebAssembly memory must be manually allocated and freed. `wasm-ffi` will allocate objects upon definition. The WebAssembly code must include `allocate` and `deallocate` functions. Up above, we linked to the file `walloc.o` in the `--initial-memory=1048576 walloc.o` statement. This is from [walloc](https://github.com/wingo/walloc). The `flags` argument is passed to the linker and can include other `wasm32` object files. The memory must be a multiple of 65536 bytes.
-
-[This](https://github.com/SciML/DiffEqGPU.jl/blob/73f76809439424245d7bfd48f70c9a625e29101c/src/integrators/types.jl#L11-L46) is the definition of the integrator used by `solv`. It is a mutable struct. Here is how we generate interfacing code that generates types in JavaScript that will replicate the memory layout we need in Julia:
-
-```julia:j4
-using WebAssemblyInterfaces
-
-integ_types = js_types(typeof(integ))
-integ_def = js_def(integ)
-
-println(integ_types)
-```
-\output{j4}
-
-We will later use both of these results to splice this into our JavaScript code included in this file. 
-
-On the JavaScript side, we can manipulate the object as you would expect, like `integ.dt = 0.2` or `integ.p = [12, 3, 4]`.
-
-\end{section}
-
-\begin{section}{title="Publishing"}
-
-WebAssembly files can be used in any type of web page, including those created with static-site generators like Jekyll. Julia has several great options for creating HTML pages, including [Documenter](https://documenter.juliadocs.org/stable/), [Franklin](https://franklinjl.org/), and [Literate](https://fredrikekre.github.io/Literate.jl/v2/). For this page, I used [PkgPage](https://tlienart.github.io/PkgPage.jl/) which is nice for "one pagers". Using a Julia-based option is nicer in that we can use the results and stuff them in the page. For example, the interfacing code above is directly included with a custom PkgPage/Franklin HTML command.
-
-We also need JavaScript to control interactivity. (Doing this on the Julia/WebAssembly side is not yet feasible.) There are so many JavaScript packages, it's hard to pick. Here, I use [mdpad](https://mdpad.netlify.app/) which has features that are nice for one-page apps. To use it, we need to define `mdpad_init` and `mdpad_update` functions. I used [Mithril.js](https://mithril.js.org/) to generate inputs and outputs. 
-
-To start with, we'll write out our interfacing code from above. We'll use a custom Franklin HTML command to insert this into the HTML for this page (`{{ rawoutput j5 }}` later in this file). `integ_types` is just stored as regular definition. `integ_def` is defined as a function to allow new instances to be created.
-
-```julia:j5
-println("<script>\n", integ_types, "\n\n")
-println("function new_integ() {return ", integ_def, "\n}\n</script>")
-```
-
-Now, we need to define our interfacing code using wasm-ffi. This code is included in this Markdown file with `~~~` delimeters. `ffi.rust.vector` maps to a `StaticTools.MallocVector`.
-
-```c
-const library = new ffi.Wrapper({
-  julia_solv: ['number', [GPUTsit5Integrator, ffi.rust.vector('f64'), ffi.rust.vector('f64'),
-                                              ffi.rust.vector('f64'), ffi.rust.vector('f64')]],
-}, {debug: false});
-
-library.imports(wrap => ({
-  env: {
-    memory: new WebAssembly.Memory({ initial: 16 }),
-  },
-}));
-```
-Here are definitions for output vectors passed to Julia code.
-
-```c
-var t = new ffi.rust.vector('f64', new Float64Array(10000))
-var u1 = new ffi.rust.vector('f64', new Float64Array(10000))
-var u2 = new ffi.rust.vector('f64', new Float64Array(10000))
-var u3 = new ffi.rust.vector('f64', new Float64Array(10000))
-```
-
-In `mdpad_init`, we load the WebAssembly file `libs/julia_solv.wasm` and then create an input form.
-
-```c
-async function mdpad_init() {
-    await library.fetch('libs/julia_solv.wasm')
-    var layout =
-      m(".row",
-        m(".col-md-3",
-          m("br"),
-          m("br"),
-          m("form.form",
-            minput({ title:"σ", mdpad:"p1", step:0.2, value:10.0 }),
-            minput({ title:"ρ", mdpad:"p2", step:1.0, value:28.0 }),
-            minput({ title:"β", mdpad:"p3", step:0.1, value:8 / 3 }),
-           )),
-        m(".col-md-1"),
-        m(".col-md-8",
-          m("#results"),
-          m("#plot1", {style:"max-width:500px"})),
-      m(".row",
-        m(".col-md-1"),
-        m(".col-md-8",
-          m("#plot2"))))
-    await m.render(document.querySelector("#mdpad"), layout);
-}
-```
-
-`mdpad_update`, creates allocates a new integrator, updates the initial conditions using data from the form, and runs `julia_solv`. `julia_solv` fills up the output vectors, and we plot these with Plotly.
- 
-```c
-function mdpad_update() {
-    var integ = new_integ();
-    integ.p.data = [mdpad.p1, mdpad.p2, mdpad.p3];
-    library.julia_solv(integ, t, u1, u2, u3);
-    integ.free();
-    tdata = [{x: t.values, y: u1.values, type: "line", name: "x"}, 
-            {x: t.values, y: u2.values, type: "line", name: "y"}, 
-            {x: t.values, y: u3.values, type: "line", name: "z"}] 
-    tplot = mplotly(tdata, { width: 900, height: 300, margin: { t: 20, b: 20 }}, {responsive: true})
-    m.render(document.querySelector("#plot2"), tplot)
-    xydata = [{x: u1.values, y: u2.values, type: "line", name: "x"}] 
-    xyplot = mplotly(xydata, { width: 400, height: 400, margin: { t: 20, b: 20, l: 20, r: 20 }}, {responsive: true})
-    m.render(document.querySelector("#plot1"), xyplot)
-}
-```
-
-That's it! Overall, the experience with PkgPage is rather interactive. During development, make changes to the Julia code, the Markdown, or the JavaScript code, save the file, and watch results update in the browser.
-
-This work takes inspiration from this cool [fluid simulation tool](https://github.com/Alexander-Barth/FluidSimDemo-WebAssembly) in Julia/WebAssembly by Alexander Barth.
-
+where $\tau$ is the time constant. The output reaches around 63% of its steady state value with time $\tau$. 
 
 \begin{showhtml}{}
 ```julia
-using OrdinaryDiffEq
+#hideall
+using StaticArrays
+using DiffEqGPU, OrdinaryDiffEq
 using WGLMakie
 using Markdown
+using JSServe
+using StaticTools
+import JSServe.TailwindDashboard as D
 
 Page(exportable=true, offline=true) # for Franklin, you still need to configure
 WGLMakie.activate!()
@@ -233,7 +58,8 @@ u(t) = 1
 
 first_order_sys!(t,x;τ,u) = (u(t) - x) / τ
 
-function first_order_sys!(dX, X, params, t)
+function first_order_sys!(X, params, t)
+#function first_order_sys!(dX, X, params, t)
 
     # extract the parameters
     τ = params.τ
@@ -244,160 +70,359 @@ function first_order_sys!(dX, X, params, t)
     # x_dot = (u(t) - x) / τ
     x_dot = first_order_sys!(t,x;τ=τ,u=u)
 
-    dX[1] = x_dot
+    # dX[1] = x_dot
+    # return nothing
+    return SVector{1}([x_dot])
 end
 
-App() do session::Session
-    n = 10
-    index_slider = Slider(1:n)
 
-    X0 =  [0.0]
-    X1 = [0.0]
 
+App() do session
+    tau_slider = Slider(0.1:0.1:10.)
+
+    # variables
+    t = MallocVector{Float64}(undef,1000)
+    y1 = MallocVector{Float64}(undef,1000)
+
+    # First order system 
+    # X0 = @SVector [0.0]
+    X0 = SVector{1}([0.0])
     tspan = (0.0, 5.0)
     parameters = (;τ=0.2)
     
     prob2 = ODEProblem(first_order_sys!, X0, tspan, parameters)
-    sol = solve(prob2, Tsit5(), reltol = 1e-8, abstol = 1e-8)
-    
-    fig = Figure()
-    ax = Axis(fig[1, 1])
 
+    # plotting
+    fig = Figure(resolution=(800,600))
+    ax = Axis(fig[1, 1], 
+        limits=(tspan[1], tspan[2], 0, 1.),
+        title="First order response",
+        titlefont=:regular,
+        titlesize=30,
+        xlabelsize=25,
+        ylabelsize=25,
+        xticklabelsize=25,
+        yticklabelsize=25)
+
+    x_vec = Observable{Vector{Float64}}([0.])
     y_vec = Observable{Vector{Float64}}([0.])
-    
 
-    integ = DiffEqGPU.init(GPUTsit5(), prob.f, false, u0, 0.0, 0.005, p, nothing, CallbackSet(nothing), true, false)
-    tres = MallocVector{Float64}(undef,10000)
-    u1 = MallocVector{Float64}(undef,10000)
-    u2 = MallocVector{Float64}(undef,10000)
-    u3 = MallocVector{Float64}(undef,10000)
+    lines!(ax, x_vec, y_vec)
 
+    slider_grid_1 = DOM.div("Time Constant: ", tau_slider, tau_slider.value)
 
-    t_vec =  collect(Int32(1):Int32(10000))
-    lines!(ax, t_vec, y_vec)
-    
-    on(index_slider) do val  
+    # interactions
+    app = map(tau_slider.value) do val
+        params = (;τ=Float64(val) )
 
-        # prob = ODEProblem(first_order_sys!, [0.2], tspan, parameters)
-        # sol = solve(prob, Tsit5(), reltol = 1e-8, abstol = 1e-8)
-        # y_vec[] =  vcat(sol.u...)
+        integ = DiffEqGPU.init(GPUTsit5(), prob2.f, false, X0, 0.0, 0.005, params, nothing, CallbackSet(nothing), true, false)
 
-        # u0 = @SVector [val; 0.0; 0.0]
-        # integ = DiffEqGPU.init(GPUTsit5(), prob.f, false, u0, 0.0, 0.005, p, nothing, CallbackSet(nothing), true, false)
-
-        # for i in Int32(1):Int32(10000)
-        #   @inline DiffEqGPU.step!(integ, integ.t + integ.dt, integ.u)
-        #   tres[i] = integ.t
-        #   u1[i] = integ.u[1]
-        #   # u2[i] = integ.u[2]
-        #   # u3[i] = integ.u[3]
-        # end
-
-        X0 = @SVector [0.0]
-        p2 = @SVector [Float64(val) / 10.0]
-        integ2 = DiffEqGPU.init(GPUTsit5(), prob2.f, false, X0, 0.0, 0.005, p2, nothing, CallbackSet(nothing), true, false)
-
-        for i in Int32(1):Int32(10000)
-          @inline DiffEqGPU.step!(integ2, integ2.t + integ2.dt, integ2.u)
-          tres[i] = integ2.t
-          u1[i] = integ2.u[1]
-          # u2[i] = integ.u[2]
-          # u3[i] = integ.u[3]
+        for i in Int32(1):Int32(1000)
+            t[i] = integ.t
+            y1[i] = integ.u[1]
+            
+            @inline DiffEqGPU.step!(integ, integ.t + integ.dt, integ.u)
+          
         end
-
-        y_vec[] = u1
+        
+        x_vec[] =  t
+        y_vec[] =  y1
     end
     
-    slider = DOM.div("z-index: ", index_slider, index_slider.value)
-    return JSServe.record_states(session, DOM.div(slider, fig))
+    return JSServe.record_states(session,  DOM.div(fig, slider_grid_1))
+    
 end
-
 
 ```
 \end{showhtml}
 
+# Second order response
+
+Equation is: $$ \ddot{x} + 2 \zeta \omega_n \dot{x} + \omega_n^2x = u(t) $$
+
+where $\tau$ is the time constant, $\zeta$ is the damping ratio and $\omega_n$ is the ntural frequency. One issue with this model is that thinking in terms of the natural frequency is often non-intuitive, unlike the time constant. For damping ratio close to 1, it can be approximated as $$ \ddot{x} + \frac{2\zeta\dot{x}}{\tau} + \frac{x}{\tau^2} = u(t) $$. Then, the settling time is around 4 time constants
+
+\begin{showhtml}{}
+```julia
+#hideall
+using StaticArrays
+using DiffEqGPU, OrdinaryDiffEq
+using WGLMakie
+using Markdown
+using JSServe
+using StaticTools
+import JSServe.TailwindDashboard as D
+
+# forcing function
+u(t) = 1
+
+second_order_sys!(t,x, x_dot; τ,ζ,u) = -(2*ζ*x_dot)/τ - x/τ^2 +  u(t)/τ^2
+
+function second_order_sys!(X, params, t)
+    # extract the parameters
+    τ = params.τ
+    ζ = params.ζ
+
+    # extract the state
+    x = X[1]
+    x_dot = X[2]
+    
+    x_ddot = second_order_sys!(t,x,x_dot; τ=τ,ζ=ζ,u=u)
+
+    return SVector{2}([x_dot, x_ddot])
+end
+
+App() do session
+    tau_slider = Slider(0.1:0.1:10.)
+    zeta_slider = Slider(0.:0.1:1.)
+
+    # variables
+    t = MallocVector{Float64}(undef,1000)
+    y1 = MallocVector{Float64}(undef,1000)
+
+    # Second order system 
+    X0 = SVector{2}([0., 0.])
+    tspan = (0.0, 5.0)
+    parameters = (;τ=0.2, ζ=0.8)
+    
+    prob2 = ODEProblem(second_order_sys!, X0, tspan, parameters)
+
+    # plotting
+    fig = Figure(resolution=(800,600))
+    ax = Axis(fig[1, 1], 
+        limits=(tspan[1], tspan[2], 0, 2.),
+        title="First order response",
+        titlefont=:regular,
+        titlesize=30,
+        xlabelsize=25,
+        ylabelsize=25,
+        xticklabelsize=25,
+        yticklabelsize=25)
+
+    x_vec = Observable{Vector{Float64}}([0.])
+    y_vec = Observable{Vector{Float64}}([0.])
+
+    lines!(ax, x_vec, y_vec)
+
+    slider_grid_1 = DOM.div("Time Constant: ", tau_slider, tau_slider.value)
+    slider_grid_2 = DOM.div("Damping Ratio: ", zeta_slider, zeta_slider.value)
+
+    # interactions
+    app = map(tau_slider.value, zeta_slider.value) do val, zeta_val
+        params = (;τ=Float64(val) , ζ=Float64(zeta_val))
+
+        integ = DiffEqGPU.init(GPUTsit5(), prob2.f, false, X0, 0.0, 0.005, params, nothing, CallbackSet(nothing), true, false)
+
+        for i in Int32(1):Int32(1000)
+            t[i] = integ.t
+            y1[i] = integ.u[1]
+            
+            @inline DiffEqGPU.step!(integ, integ.t + integ.dt, integ.u)
+          
+        end
+        
+        x_vec[] =  t
+        y_vec[] =  y1
+    end
+
+    return JSServe.record_states(session,  DOM.div(fig, slider_grid_1, slider_grid_2))
+    
+end
+
+```
+\end{showhtml}
+
+
 \end{section}
 
+<!-- \begin{showhtml}{}
 
-~~~
+```julia
+#hideall
 
-<script src="libs/mdpad/mdpad.js"></script>
-<script src="libs/mdpad/mdpad-mithril.js"></script>
-<script src="libs/wasm-ffi.browser.js"></script>
+using StaticArrays
+using DiffEqGPU, OrdinaryDiffEq
+using WGLMakie
+using Markdown
+using JSServe
+using StaticTools
+import JSServe.TailwindDashboard as D
+using GeometryBasics
+using FileIO
 
-~~~
-{{ rawoutput j5 }}
-~~~
+function meshcube(o=Vec3f(0), sizexyz=Vec3f(1))
+    uvs = map(v -> v ./ (3, 2), Vec2f[
+        (0, 0), (0, 1), (1, 1), (1, 0),
+        (1, 0), (1, 1), (2, 1), (2, 0),
+        (2, 0), (2, 1), (3, 1), (3, 0),
+        (0, 1), (0, 2), (1, 2), (1, 1),
+        (1, 1), (1, 2), (2, 2), (2, 1),
+        (2, 1), (2, 2), (3, 2), (3, 1),
+    ])
+    m = normal_mesh(Rect3f(Vec3f(-0.5) .+ o, sizexyz))
+    m = GeometryBasics.Mesh(meta(coordinates(m);
+            uv=uvs, normals=normals(m)), faces(m))
+end
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mithril/2.0.4/mithril.min.js"></script>
-<script src="https://cdn.plot.ly/plotly-basic-1.54.1.min.js"></script>
+App() do session
+    slider = Slider(0.1:0.1:10)
+    menu = D.Dropdown( "",[sin, tan, cos])
+    cmap_button = D.Button("change colormap")
+    textfield = D.TextField("type in your text")
 
+    inp_1 = D.NumberInput(0.0)
+    inp_2 = D.NumberInput(0.0)
+    inp_3 = D.NumberInput(0.0)
 
-<script>
-const library = new ffi.Wrapper({
-  julia_solv: ['number', [GPUTsit5Integrator, ffi.rust.vector('f64'), ffi.rust.vector('f64'),
-                                              ffi.rust.vector('f64'), ffi.rust.vector('f64')]],
-}, {debug: false});
+    cmap = map(cmap_button) do click
+    end
 
-library.imports(wrap => ({
-  env: {
-    memory: new WebAssembly.Memory({ initial: 16 }),
-  },
-}));
+    value = map(slider.value) do x
+        # return x ^ 2
+    end
 
-var t = new ffi.rust.vector('f64', new Float64Array(10000))
-var u1 = new ffi.rust.vector('f64', new Float64Array(10000))
-var u2 = new ffi.rust.vector('f64', new Float64Array(10000))
-var u3 = new ffi.rust.vector('f64', new Float64Array(10000))
+    # load mesh 
+    crazyflie_stl = load(assetpath(String(@__DIR__) * "/assets/cf2_assembly.obj"))
 
+    # plot cube volume 
+    bbox_length = 2
+    bbox_width = 2
+    bbox_height = 2
 
-async function mdpad_init() {
-    await library.fetch('libs/julia_solv.wasm')
-    var layout =
-      m(".row",
-        m(".col-md-3",
-          m("br"),
-          m("br"),
-          m("form.form",
-            minput({ title:"σ", mdpad:"p1", step:0.2, value:10.0 }),
-            minput({ title:"ρ", mdpad:"p2", step:1.0, value:28.0 }),
-            minput({ title:"β", mdpad:"p3", step:0.1, value:8 / 3 }),
-           )),
-        m(".col-md-1"),
-        m(".col-md-8",
-          m("#results"),
-          m("#plot1", {style:"max-width:500px"})),
-      m(".row",
-        m(".col-md-1"),
-        m(".col-md-8",
-          m("#plot2"))))
-    await m.render(document.querySelector("#mdpad"), layout);
-}
+    # add floor
+    floor_width = 50
+    floor_mesh = meshcube(Vec3f(0.5, 0.5, 0.46), Vec3f(bbox_length, bbox_width, 0.01))
 
-function mdpad_update() {
-    var integ = new_integ();
-    integ.p.data = [mdpad.p1, mdpad.p2, mdpad.p3];
-    library.julia_solv(integ, t, u1, u2, u3);
-    integ.free();
-    tdata = [{x: t.values, y: u1.values, type: "line", name: "x"}, 
-            {x: t.values, y: u2.values, type: "line", name: "y"}, 
-            {x: t.values, y: u3.values, type: "line", name: "z"}] 
-    tplot = mplotly(tdata, { width: 900, height: 300, margin: { t: 20, b: 20 }}, {responsive: true})
-    m.render(document.querySelector("#plot2"), tplot)
-    xydata = [{x: u1.values, y: u2.values, type: "line", name: "x"}] 
-    xyplot = mplotly(xydata, { width: 400, height: 400, margin: { t: 20, b: 20, l: 20, r: 20 }}, {responsive: true})
-    m.render(document.querySelector("#plot1"), xyplot)
-}
-</script>
+    # # show quad 
+    # fig = mesh(crazyflie_stl, figure = (resolution = (1200, 1000),))
 
-~~~
+    fig2 = Figure(resolution = (1200, 1200))
+    pl = PointLight(Point3f(0), RGBf(20, 20, 20))
+    al = AmbientLight(RGBf(0.2, 0.2, 0.2))
+    lscene = LScene(fig2[1, 1], show_axis=false, scenekw = (lights = [pl, al], backgroundcolor=:white, clear=true))
+    zoom!(lscene.scene, cameracontrols(lscene.scene), 3)
+    update_cam!(lscene.scene, cameracontrols(lscene.scene))
 
+    # now you can plot into lscene like you're used to
+    mesh!(crazyflie_stl)
 
+    # # show floor
+    # floor = mesh!(floor_mesh; color=:green, interpolate=false)
+    # translate!(floor, Vec3f(-bbox_length / 2, -bbox_width / 2, 0))
 
+    slider_grid = DOM.div("z-index: ", slider, slider.value)
+    
+    return JSServe.record_states(session, DOM.div(fig2, slider_grid, menu, DOM.div("x: ",inp_1, "y: ",inp_2 , "z: ",inp_3)))
+end
+
+```
+\end{showhtml} -->
 
 
+\begin{section}{}
+
+## Examples
+
+### Autonomous cars
+
+1. **Cruise Control:** Only the velocity needs to be regulated (one state variable). So, first order model is enough
+
+### Quadcopters
+
+1. **BLDC Motor modelling:** Actually a second order system, but behaves like a first order system due to the high bandwidth (quick response) of the BLDC motor system. Simpler, just one parameter to fit the model (time constant). Widely used in quadcopter simulations ([link to fig source] (https://github.com/uzh-rpg/rpg_quadrotor_control/blob/master/documents/theory_and_math/theory_and_math.pdf) )
+
+![BLDC first order model](/assets/images/first_order_bldc.png)
+
+2. **Cascaded control architecture:** Due to the first order dynamics of the BLDC motors, the attitude dynamics also have first order behaviour. So, attitude commands can be tracked using tight PID loops at high rates (eg. 500 Hz) with feedback from the gyro and accelerometer. The position control loop can run much slower since it has much slower second order dynamics (eg. 50 Hz)
 
 
+# Simulation
 
+## Choice of Simulator
+
+There's no one size fits all simulator. If you're using ROS Gazebo is probably the most convenient one, since it's well integrated into the ROS ecosytem. However, you'll quickly run out of luck if you want to do photorealistic simultion. A game engine like Unreal / Unity would be your best bet here. Similary, you might have to write your own dynamics simulator for specific requirements such as accuarate contact dynamics. Running lots of parallel simulations on the GPU would require another simulator like Nvidia Issac Gym or a custom solution. 
+
+## Simulator vs Visualizer
+
+It's important to differentiate between the two. Eg. Gazebo is a simulator (physics engine + visualizer), while RViz is jst a visualizer. Simulators can also be shipped without a visualizer ,ie, just the physics engine. In some cases (eg. computer vision), the visualization might be part of the simulation.
+
+## Choice of Integrator Algorithm and Implementation
+
+* Euler forward is the the simplest, but unstable 
+* Runga-Kutta 4th order (RK4) is a bit more complcated, but is mich more accurate
+* Much fancier algorithms exist (eg. Rosenbrock for stiff ODE's) but RK4 gets the job done most of the time. Popular ODE solvers such Matlab ODE45, scipy ODEint, DIfferentialEquations.jl etc use some fancy version of Rk4 (eg. with adaptive timestepping) as the default algorithm.
+
+## Lockstep Simulation
+
+The simulator and autonomy stack wait for messages from each other. Can be used to emulate an RTOS (realtime operating system) based autonomy stack (eg. on a microcontroller) that performs tasks in hard real time, on a non-realtime operating system (eg. linux, windows). Also, this ensures that the simulations are repeatable since messages are never missed.
+
+## In the loop simulation 
+
+### Software in the Loop (SITL)
+
+The actual software stack running on the robot is used for the simulation. New algorithms are typically written in a high level language like C++/python while prototyping. Then, it's ported to a faster low level language like C/C++. SITL simulaitions can be used to validate the real world software stack without actually testing it on the physical hardware
+
+### Processor in the loop (SITL)
+
+In SITL simulations, all code is usually executed on the development machine. However, the computing platfroms used on the robot might have severe limitations due to their embedded nature (eg. small flash size,stack overflow etc for microcontrollers). There's a chance that code working correctly on the development machine doesn't work on the onboard computer. To test this, the autonomy stack is run on the onboard computer during simulation. 
+
+## Hardware in the Loop Simulation (HITL)
+
+It refers to any simulation that involves hardware. The previously mentioned processor in loop simulation is also an example of HITL simulation.
+
+# Systems Engineering and Architecture
+
+Architecture is design, and design is art. Much better to explain it using a case study basis. Will as reference paper by Lupashin et al describing the architecure of the Flying Machine Arena (FMA). Well written, contains wealth of information  
+
+## Everything is a tradeoff
+
+* There's no free lunch in systems engineering. Every decision that you take to improve one aspect will be detrimental to some other aspect. Let's look at a few examples: 
+
+a) The older version of the had a Raspberry Pi instead of the Nvidia Jetson. The Jetson is better for image processing (especially ML based) but what's the downside ? Shorter battery life (3-5 W vs 7-15 W) comparison and higher cost (4x higher). These factors not critical for a toy platform duckiebot, but super-important in real life applications. Many of the readers might be familiar with the company Zipline that uses autonomous drones to develop medical supplies. Their flagship platform only a low microcontroller as the flight computer (no high level computers like Raspberry Pi of Jetson). This means that it has much less computing power than the duckibot !. To be fair, it doesn't have cameras, so no heavy image processing. But powerful control methods such as MPC would require something like a Raspberry Pi. So, why stick with the microcontroller when using a Raspberry Pi would enable much better controllers ? Well, you alrready know the answer. The are fighting fro grams and milliwatts to increase the range. Each additional kilometer gained results in a bunch of lives saved.
+
+ b) For most robotic systems, the IMU connectected to to microcontroller, which in turn connected to the onboard computers.The duckiebot follows the same pattern. The IMU communicates via SPI, which is supported by the Jetson a. So, why not conect it to the Jetson directly ?
+
+<!-- ## Trade design study 
+
+Compare factors against each other
+
+## Modularity
+
+* Both and hardware level and software level.For project, all of the hardware and most of the software already provided. Your code would most likely be a couple of nodes that add on to the exsiting software infrastructure. It's worth studying the system architecture for two reasons. You will need to know how the submodules are connected to do the project
+* 
+
+## Hardware 
+
+* Not much you can do here, hardware is already
+
+## Co-Design -->
+
+# Resources
+
+### Real world systems
+
+1. [Raffaelo D'Andrea's talk on Robustness] (https://www.youtube.com/watch?v=_47JnJeSDFU)
+2. [Brian Douglas's playlist on control systems in practice] (https://www.youtube.com/playlist?list=PLn8PRpmsu08pFBqgd_6Bi7msgkWFKL33b)
+
+### Systems engineering
+
+1. [Brian Douglas's playlist on systems engineering](https://www.youtube.com/playlist?list=PLn8PRpmsu08owzDpgnQr7vo2O-FUQm_fL)
+2. [Gentry Lee's talk at NASA](https://www.youtube.com/watch?v=E6U_Ap2bDaE)
+
+### Control theory
+
+1. [Steve Brunton's control bootcamp](https://www.youtube.com/playlist?list=PLMrJAkhIeNNR20Mz-VpzgfQs5zrYi085m)
+2. [Brian Douglas's playlist on classical control](https://www.youtube.com/playlist?list=PLUMWjy5jgHK1NC52DXXrriwihVrYZKqjk)
+3. [Brian Douglas's playlist on state-space control] (https://www.youtube.com/watch?v=hpeKrMG-WP0&list=PLfqhYmT4ggAtpuB1g8NbgH912PwYjn_We)
+
+### State Estimation
+
+1. [Tucker McClure's blog] (https://link-url-here.org)
+
+<!-- # Failsafes 
+
+Anything that can fail will fail -->
+
+\end{section} 
 
 

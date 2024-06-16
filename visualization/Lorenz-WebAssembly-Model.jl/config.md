@@ -1,10 +1,10 @@
-@def title       = "Lorenz Attraction App in Julia"
-@def prepath     = "Lorenz-WebAssembly-Model.jl"
+@def title       = "Duckietown Project Notes"
+@def prepath     = "Duckietown-Project-Notes.jl"
 @def description = """
                    An example app to demonstrate how Julia code for DiffEq-type 
                    simulations can be compiled for use on the web.
                    """
-@def authors     = "Tom Short"
+@def authors     = "Sarath Suresh"
 
 <!--  NAVBAR SPECS
   NOTE:
@@ -16,7 +16,7 @@
   - nav_logo_path: where the logo is
 -->
 @def add_docs  = true
-@def docs_url  = "https://github.com/tshort/Lorenz-WebAssembly-Model.jl"
+@def docs_url  = "https://github.com/sarath-menon/Duckietown-Project-Notes.jl"
 @def docs_name = "GitHub"
 
 @def add_nav_logo   = true
@@ -67,7 +67,7 @@
 
 @def add_github_view  = true
 @def add_github_star  = true
-@def github_repo      = "tshort/Lorenz-WebAssembly-Model.jl"
+@def github_repo      = "sarath-menon/Lorenz-WebAssembly-Model.jl"
 
 <!-- SECTION LAYOUT
 NOTE:
@@ -124,7 +124,7 @@ These definitions are important for the good functioning of some of the
 commands that are defined and used in PkgPage.jl
 -->
 @def sections        = Pair{String,String}[]
-@def section_counter = 1
+@def section_counter = 0
 @def showall         = false
 
 \newcommand{\html}[1]{~~~#1~~~}
